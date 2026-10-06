@@ -2,19 +2,13 @@
 
 A three-reel slot machine inside Claude Code, paid in `󱚦` CLD (Claude Dollars).
 
-```
-⣶⡀⡀⡀⣶⡀⡀⡀⣶⡀⡀⡀⣶⡀⡀⡀⣶⡀⡀⡀⣶⡀⡀⡀⣶
-╔═══════╤═══════╤═══════╗
-║▀▀▀▀▀██│▗█████▖│   ╱╲  ║
-║    ▄█▀│██ $ ██│  ╱  ╲ ║
-║   ██  │▝█████▘│ ██  ██║
-╚═══════╧═══════╧═══════╝
-      BET 25 · 1 to spin
-```
+![the band: reels, wallet, stats and controls above the prompt](../../assets/slop-machine.png)
 
 The machine lives in the band above the prompt. Beside the reels: the balance and the bet, the session's income by source, the session's spin stats, the lifetime hall of fame, and the last two spins.
 
 Digits work at an empty prompt: `1` spins, `2` cycles the bet (25, 50, 100, 250, 500), `8` mutes and unmutes (kept across sessions), `0` hides the band to one line. The buttons are clickable too.
+
+![the band hidden to one line, and the turn's closing line with the tally](../../assets/slop-machine-mini.png)
 
 While a turn runs, the spinner line (`Sauteing… 12s`) carries a live meter: Claude's tool calls and what they will pay, your spins so far, the balance.
 

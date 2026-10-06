@@ -2,6 +2,8 @@
 
 Mods for Claude Code: live panes, bands, status lines and hooks, written as plugins of function hooks that hot-reload while you work.
 
+![slop-machine: a slot machine above the prompt](assets/slop-machine.png)
+
 ## Mods
 
 | mod | what it is |
