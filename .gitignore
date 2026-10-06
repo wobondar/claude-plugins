@@ -1,0 +1,4 @@
+# engine-generated beside hot-reloaded mods
+/mods/*/.claude-plugin/types/
+/mods/*/tsconfig.json
+.DS_Store

@@ -1,0 +1,29 @@
+{
+  "name": "slop-machine",
+  "version": "1.0.0",
+  "description": "A three-reel slot machine in the band, a pane, a toast and the spinner, paid in Claude Dollars you earn by prompting and Claude earns by calling tools.",
+  "author": {
+    "name": "wobondar"
+  },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "sounds": {
+      "type": "boolean",
+      "description": "Play the reel clips (macOS only).",
+      "default": true,
+      "title": "Sounds"
+    },
+    "announcer": {
+      "type": "boolean",
+      "description": "Let the macOS voice announce jackpots and type errors.",
+      "default": true,
+      "title": "Announcer voice"
+    },
+    "startingBalance": {
+      "type": "number",
+      "description": "Claude Dollars a fresh session starts with.",
+      "default": 100,
+      "title": "Starting balance"
+    }
+  }
+}
