@@ -3,6 +3,7 @@
   "owner": { "name": "wobondar" },
   "description": "Mods for Claude Code: live panes, bands and hooks that hot-reload.",
   "plugins": [
-    { "name": "slop-machine", "source": "./mods/slop-machine", "description": "A three-reel slot machine above the prompt, paid in Claude Dollars you earn by prompting and Claude earns by calling tools." }
+    { "name": "slop-machine", "source": "./mods/slop-machine", "description": "A three-reel slot machine above the prompt, paid in Claude Dollars you earn by prompting and Claude earns by calling tools." },
+    { "name": "slop-tetris", "source": "./mods/slop-tetris", "description": "Tetris in a pane, played with letter hotkeys. No wallet required." }
   ]
 }

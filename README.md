@@ -2,21 +2,31 @@
 
 Mods for Claude Code: live panes, bands, status lines and hooks, written as plugins of function hooks that hot-reload while you work.
 
-![slop-machine: a slot machine above the prompt](assets/slop-machine.png)
-
 ## Mods
 
-| mod | what it is |
-| --- | --- |
-| [slop-machine](mods/slop-machine) | A three-reel slot machine above the prompt, paid in `󱚦` Claude Dollars you earn by prompting and Claude earns by calling tools. |
+### [slop-machine](mods/slop-machine)
 
-## Install
+A three-reel slot machine above the prompt, paid in `󱚦` Claude Dollars you earn by prompting and Claude earns by calling tools.
 
 ```
 /plugin install slop-machine --marketplace wobondar/claude-plugins
 ```
 
-Answer `y` to add the marketplace, then pick a scope. The marketplace is added once; later mods install with the same line and their own name.
+![slop-machine: a slot machine above the prompt](assets/slop-machine.png)
+
+### [slop-tetris](mods/slop-tetris)
+
+Tetris in a pane, played with letter hotkeys. No wallet required.
+
+```
+/plugin install slop-tetris --marketplace wobondar/claude-plugins
+```
+
+![slop-tetris: the well, hold and next, score, and the hotkey strip](assets/slop-tetris.png)
+
+## Install
+
+Answer `y` to add the marketplace the first time, then pick a scope. The marketplace is added once; later mods install with the same line and their own name.
 
 ## Develop
 

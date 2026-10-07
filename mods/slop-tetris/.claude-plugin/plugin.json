@@ -1,0 +1,9 @@
+{
+  "name": "slop-tetris",
+  "version": "0.1.0",
+  "description": "Tetris in a pane, played with letter hotkeys while the pane has focus. No wallet required.",
+  "author": {
+    "name": "wobondar"
+  },
+  "types": "./types/index.d.ts"
+}
