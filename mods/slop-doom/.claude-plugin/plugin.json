@@ -1,0 +1,17 @@
+{
+  "name": "slop-doom",
+  "version": "0.1.0",
+  "description": "DOOM (shareware) in a pane: doomgeneric runs as WebAssembly in a sidecar, every frame lands in a Raster.",
+  "author": {
+    "name": "wobondar"
+  },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "fps": {
+      "type": "number",
+      "description": "Frames a second the sidecar sends to the pane. Lower it if the picture flickers.",
+      "default": 15,
+      "title": "Frames per second"
+    }
+  }
+}

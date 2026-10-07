@@ -24,6 +24,16 @@ Tetris in a pane, played with letter hotkeys. No wallet required.
 
 ![slop-tetris: the well, hold and next, score, and the hotkey strip](assets/slop-tetris.png)
 
+### [slop-doom](mods/slop-doom)
+
+DOOM (shareware) in a pane. doomgeneric runs as WebAssembly in a sidecar, every frame lands in a Raster at up to 160 columns. Needs `bun` or `node`. GPL-2.0.
+
+```
+/plugin install slop-doom --marketplace wobondar/claude-plugins
+```
+
+![slop-doom: the DOOM title screen in a pane](assets/slop-doom.png)
+
 ## Install
 
 Answer `y` to add the marketplace the first time, then pick a scope. The marketplace is added once; later mods install with the same line and their own name.
@@ -40,4 +50,4 @@ claude --plugin-dir ./mods/<mod>
 
 ## License
 
-MIT
+MIT, except `mods/slop-doom`, which embeds DOOM and is GPL-2.0.

@@ -1,0 +1,10 @@
+slop-doom is licensed under the GNU General Public License, version 2, as the
+DOOM source it embeds.
+
+doom/doom.js and doom/doom.wasm are a build of doomgeneric
+(https://github.com/ozkl/doomgeneric, GPL-2.0) by id Software and Ozkan
+Sezer, compiled by pi-doom (https://github.com/badlogic/pi-doom, GPL-2.0,
+Mario Zechner) with Emscripten. doom/doom1.wad is the DOOM shareware episode,
+redistributable under id Software's shareware terms.
+
+The text of the GPL-2.0 is at https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
