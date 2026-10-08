@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
 
-import { CONTROLS, HOLD_MS, KEY, WEAPONS, blankCells, emptyLog, press, releaseAll, releaseDue, serialize, shapeFor, splitLines } from '../hooks/wire'
+import { CONTROLS, HOLD_MS, KEY, WEAPONS, autoColumns, blankCells, emptyLog, isImageRefusal, pickDisplay, press, releaseAll, releaseDue, serialize, shapeFor, splitLines } from '../hooks/wire'
 import type { Control } from '../hooks/wire'
 
 const control = (key: string): Control => {
@@ -77,11 +77,37 @@ describe('frames', () => {
     expect(b.rest).toBe('')
   })
 
-  test('shapeFor keeps the aspect and the Raster bounds', () => {
-    expect(shapeFor(80)).toEqual({ columns: 80, rows: 24 })
-    expect(shapeFor(120)).toEqual({ columns: 120, rows: 36 })
-    expect(shapeFor(10)).toEqual({ columns: 40, rows: 12 })
+  test('shapeFor keeps 4:3 and the bounds of each element', () => {
+    expect(shapeFor(80)).toEqual({ columns: 80, rows: 28 })
+    expect(shapeFor(120)).toEqual({ columns: 120, rows: 42 })
+    expect(shapeFor(120, 'image', 0.5)).toEqual({ columns: 120, rows: 45 })
+    expect(shapeFor(10)).toEqual({ columns: 40, rows: 14 })
     expect(shapeFor(9999).columns).toBe(512)
+    expect(shapeFor(9999, 'image')).toEqual({ columns: 255, rows: 90 })
+  })
+
+  test('autoColumns fits the width, then the height when it is known', () => {
+    expect(autoColumns(120)).toBe(114)
+    expect(autoColumns(300)).toBe(160)
+    expect(autoColumns(300, 55)).toBe(110)
+    expect(autoColumns(300, 61, 0.467)).toBe(128)
+    expect(autoColumns(300, 100)).toBe(160)
+    expect(autoColumns(300, 12)).toBe(40)
+  })
+
+  test('pickDisplay reads the terminal from the environment', () => {
+    expect(pickDisplay({})).toBe('cells')
+    expect(pickDisplay({ termProgram: 'ghostty' })).toBe('image')
+    expect(pickDisplay({ termProgram: 'WezTerm' })).toBe('image')
+    expect(pickDisplay({ termProgram: 'Apple_Terminal' })).toBe('cells')
+    expect(pickDisplay({ kittyWindow: '1' })).toBe('image')
+    expect(pickDisplay({ termProgram: 'ghostty', tmux: '/tmp/tmux-501/default,1,0' })).toBe('cells')
+  })
+
+  test('isImageRefusal tells a terminal without pictures from a passing hiccup', () => {
+    expect(isImageRefusal('the Image draws its alt there: no placeholder images')).toBe(true)
+    expect(isImageRefusal('a file this terminal cannot read')).toBe(false)
+    expect(isImageRefusal('nothing of this plugin is mounted there')).toBe(false)
   })
 
   test('blankCells packs columns times rows triplets', () => {

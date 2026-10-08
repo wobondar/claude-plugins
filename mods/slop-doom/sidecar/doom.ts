@@ -1,10 +1,15 @@
 // Runs doomgeneric (WASM) outside the plugin sandbox. Frames go to stdout as
-// `F <base64 cells>` lines ready for a Raster; key events come from a file the
-// hooks module rewrites, since the child's stdin is closed at start.
-import { readFileSync, statSync } from 'node:fs'
+// `F <base64 cells>` lines ready for a Raster, or, with `--out`, as native
+// 320x200 RGB written to that file (rename for atomicity) and announced as
+// `I <generation>`. Key events come from a file the hooks module rewrites,
+// since the child's stdin is closed at start.
+import { readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { packCells } from './cells'
+import type { Blocks } from './cells'
 
 type DoomModule = {
   _doomgeneric_Create: (argc: number, argv: number) => void
@@ -32,6 +37,8 @@ const FPS = Number(arg('fps', '20'))
 const KEYS = arg('keys', '')
 const WAD = arg('wad', '')
 const FILTER = arg('filter', 'mode')
+const BLOCKS: Blocks = arg('blocks', 'quad') === 'half' ? 'half' : 'quad'
+const OUT = arg('out', '')
 
 const here = dirname(fileURLToPath(import.meta.url))
 const buildDir = join(here, '..', 'doom')
@@ -73,16 +80,13 @@ const start = (doom: DoomModule): void => {
   doom._doomgeneric_Create(args.length, argv)
 }
 
-const quantize = (c: number, bits: number): number => {
-  const keep = 0xff & ~((1 << (8 - bits)) - 1)
-  return c & ((keep << 16) | (keep << 8) | keep)
-}
-
-// Each half-cell covers a small source rectangle. `box` averages it (soft),
+// Each picture pixel covers a small source rectangle. `box` averages it (soft),
 // `nearest` takes its first pixel (noisy), `mode` averages only the pixels of
 // the rectangle's most common colour, which keeps edges crisp without noise.
+const PX_COLS = BLOCKS === 'quad' ? COLS * 2 : COLS
 const PX_ROWS = ROWS * 2
-const averaged = new Uint32Array(COLS * PX_ROWS)
+const picture = new Uint32Array(PX_COLS * PX_ROWS)
+const words = new Uint32Array(COLS * ROWS * 3)
 const keys = new Int32Array(64)
 const counts = new Int32Array(64)
 
@@ -130,40 +134,80 @@ const reduce = (heap: Uint32Array, W: number, x0: number, x1: number, y0: number
   return n === 0 ? 0 : (Math.round(r / n) << 16) | (Math.round(g / n) << 8) | Math.round(b / n)
 }
 
-const downsample = (heap: Uint32Array, W: number, H: number): Uint32Array => {
-  const out = averaged
+const downsample = (heap: Uint32Array, W: number, H: number): void => {
   for (let py = 0; py < PX_ROWS; py++) {
     const y0 = Math.floor(py * H / PX_ROWS)
     const y1 = Math.max(y0 + 1, Math.floor((py + 1) * H / PX_ROWS))
-    for (let col = 0; col < COLS; col++) {
-      const x0 = Math.floor(col * W / COLS)
-      const x1 = Math.max(x0 + 1, Math.floor((col + 1) * W / COLS))
-      out[py * COLS + col] = reduce(heap, W, x0, x1, y0, y1)
+    for (let px = 0; px < PX_COLS; px++) {
+      const x0 = Math.floor(px * W / PX_COLS)
+      const x1 = Math.max(x0 + 1, Math.floor((px + 1) * W / PX_COLS))
+      picture[py * PX_COLS + px] = reduce(heap, W, x0, x1, y0, y1)
     }
   }
-  return out
 }
 
+let packMs = 0
+let packed = 0
+let remappedCells = 0
+
 const encodeFrame = (doom: DoomModule, fb: number, W: number, H: number): string => {
+  const t0 = performance.now()
   const heap = new Uint32Array(doom.HEAPU8.buffer, fb, W * H)
-  const px = downsample(heap, W, H)
-  const words = new Uint32Array(COLS * ROWS * 3)
-  for (let bits = 8; bits >= 3; bits--) {
-    const pairs = new Set<number>()
-    for (let row = 0; row < ROWS; row++) {
-      for (let col = 0; col < COLS; col++) {
-        const top = quantize(px[row * 2 * COLS + col] ?? 0, bits)
-        const bottom = quantize(px[(row * 2 + 1) * COLS + col] ?? 0, bits)
-        const i = (row * COLS + col) * 3
-        words[i] = 0x2580
-        words[i + 1] = top
-        words[i + 2] = bottom
-        pairs.add(top * 16777216 + bottom)
-      }
-    }
-    if (pairs.size <= 1024) break
+  downsample(heap, W, H)
+  const result = packCells(picture, COLS, ROWS, BLOCKS, words)
+  packMs += performance.now() - t0
+  packed++
+  remappedCells += result.remapped
+  if (packed % 200 === 0) {
+    say(`pack ${(packMs / 200).toFixed(2)} ms/frame, ${(remappedCells / 200).toFixed(0)} cells redirected/frame`)
+    packMs = 0
+    remappedCells = 0
   }
   return Buffer.from(words.buffer).toString('base64')
+}
+
+// The build renders DOOM's 320x200 and doubles every pixel into 640x400, so
+// sampling every other pixel is the native picture at a quarter of the bytes.
+// A VGA pixel was 1.2 times taller than wide: 320x200 filled a 4:3 screen, so
+// the picture goes out as 320x240 and a 4:3 box shows it with no bands.
+const NATIVE_W = 320
+const OUT_H = 240
+const rgb = Buffer.alloc(NATIVE_W * OUT_H * 3)
+
+const writeNative = (doom: DoomModule, fb: number, W: number, H: number): void => {
+  const heap = new Uint32Array(doom.HEAPU8.buffer, fb, W * H)
+  const sx = W / NATIVE_W
+  const sy = H / OUT_H
+  let at = 0
+  for (let y = 0; y < OUT_H; y++) {
+    const base = Math.floor(y * sy) * W
+    for (let x = 0; x < NATIVE_W; x++) {
+      const c = heap[base + Math.floor(x * sx)] ?? 0
+      rgb[at++] = (c >> 16) & 0xff
+      rgb[at++] = (c >> 8) & 0xff
+      rgb[at++] = c & 0xff
+    }
+  }
+  writeFileSync(`${OUT}.tmp`, rgb)
+  renameSync(`${OUT}.tmp`, OUT)
+}
+
+const removeOut = (): void => {
+  if (OUT === '') return
+  for (const path of [OUT, `${OUT}.tmp`]) {
+    try {
+      unlinkSync(path)
+    } catch {
+      continue
+    }
+  }
+}
+
+for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP'] as const) {
+  process.on(signal, () => {
+    removeOut()
+    process.exit(0)
+  })
 }
 
 let lastSeq = 0
@@ -200,11 +244,12 @@ const main = async (): Promise<void> => {
   const W = doom._DG_GetScreenWidth()
   const H = doom._DG_GetScreenHeight()
   const fb = doom._DG_GetFrameBuffer()
-  say(`ready ${W}x${H} -> ${COLS}x${ROWS * 2}`)
+  say(OUT === '' ? `ready ${W}x${H} -> ${PX_COLS}x${PX_ROWS} ${BLOCKS}` : `ready ${W}x${H} -> ${NATIVE_W}x${OUT_H} rgb at ${OUT}`)
   const tickMs = 1000 / 35
   const frameEvery = Math.max(1, Math.round(35 / FPS))
   let ticks = 0
   let framedAt = 0
+  let generation = 0
   let next = performance.now()
   const loop = (): void => {
     const now = performance.now()
@@ -215,6 +260,7 @@ const main = async (): Promise<void> => {
         doom._doomgeneric_Tick()
       } catch (error) {
         say(`exit ${error instanceof Error ? error.message : String(error)}`)
+        removeOut()
         process.exit(0)
       }
       ticks++
@@ -224,7 +270,13 @@ const main = async (): Promise<void> => {
     if (ran === 0) next = Math.max(next, now)
     if (ticks - framedAt >= frameEvery) {
       framedAt = ticks
-      process.stdout.write(`F ${encodeFrame(doom, fb, W, H)}\n`)
+      if (OUT === '') {
+        process.stdout.write(`F ${encodeFrame(doom, fb, W, H)}\n`)
+      } else {
+        writeNative(doom, fb, W, H)
+        generation++
+        process.stdout.write(`I ${generation}\n`)
+      }
     }
     setTimeout(loop, Math.max(1, next - performance.now()))
   }

@@ -120,20 +120,66 @@ export const splitLines = (rest: string, chunk: string): Split => {
 
 export type Shape = { readonly columns: number; readonly rows: number }
 
+export type Display = 'image' | 'cells'
+
 export const MIN_COLUMNS = 40
 export const MAX_COLUMNS = 512
+export const MAX_IMAGE_COLUMNS = 255
 export const MAX_AUTO_COLUMNS = 160
 export const PANE_FRAME_COLUMNS = 6
 
-export const autoColumns = (terminalColumns: number): number => Math.min(MAX_AUTO_COLUMNS, terminalColumns - PANE_FRAME_COLUMNS)
+// DOOM was drawn for 4:3 screens. How many rows make a 4:3 box depends on the
+// cell's own shape, width over height: 7x15 and 8x17 coding fonts sit near
+// 0.47, a 1:2 bitmap font at 0.5. Nothing reports it, so it is a setting.
+export const DEFAULT_CELL_ASPECT = 0.47
+const PICTURE_ASPECT = 4 / 3
+
+export const clampCellAspect = (aspect: number): number => (Number.isFinite(aspect) ? Math.max(0.3, Math.min(0.8, aspect)) : DEFAULT_CELL_ASPECT)
+
+const rowsPerColumn = (cellAspect: number): number => cellAspect / PICTURE_ASPECT
+
+export const NATIVE_WIDTH = 320
+export const NATIVE_HEIGHT = 240
+
+// Rows the pane cannot give the picture: its frame, the two hotkey rows, and
+// the transcript lines, prompt and footer that must stay on screen with it.
+export const CHROME_ROWS = 16
+
+export const autoColumns = (terminalColumns: number, terminalRows?: number, cellAspect = DEFAULT_CELL_ASPECT): number => {
+  const byWidth = Math.min(MAX_AUTO_COLUMNS, terminalColumns - PANE_FRAME_COLUMNS)
+  if (terminalRows === undefined) return byWidth
+  const byHeight = Math.floor((terminalRows - CHROME_ROWS) / rowsPerColumn(cellAspect))
+  return Math.max(MIN_COLUMNS, Math.min(byWidth, byHeight))
+}
 
 export const clampFps = (fps: number): number => (Number.isFinite(fps) ? Math.max(5, Math.min(35, Math.round(fps))) : 15)
 
-export const shapeFor = (columns: number): Shape => {
-  const cols = Math.max(MIN_COLUMNS, Math.min(MAX_COLUMNS, Math.floor(columns)))
-  const rows = Math.max(12, Math.min(256, Math.round(cols * 0.3)))
+export const shapeFor = (columns: number, display: Display = 'cells', cellAspect = DEFAULT_CELL_ASPECT): Shape => {
+  const max = display === 'image' ? MAX_IMAGE_COLUMNS : MAX_COLUMNS
+  const cols = Math.max(MIN_COLUMNS, Math.min(max, Math.floor(columns)))
+  const rows = Math.max(12, Math.min(255, Math.round(cols * rowsPerColumn(cellAspect))))
   return { columns: cols, rows }
 }
+
+export type DisplayHints = {
+  readonly termProgram?: string
+  readonly kittyWindow?: string
+  readonly tmux?: string
+}
+
+const IMAGE_TERMINALS = new Set(['ghostty', 'kitty', 'wezterm'])
+
+export const pickDisplay = (hints: DisplayHints): Display => {
+  if (hints.tmux !== undefined && hints.tmux !== '') return 'cells'
+  if (hints.kittyWindow !== undefined && hints.kittyWindow !== '') return 'image'
+  return IMAGE_TERMINALS.has((hints.termProgram ?? '').toLowerCase()) ? 'image' : 'cells'
+}
+
+export const parseDisplay = (word: string): Display | undefined => (word === 'image' || word === 'cells' ? word : undefined)
+
+export const IMAGE_DENIES_BEFORE_FALLBACK = 20
+
+export const isImageRefusal = (deny: string): boolean => /\balt\b|image|picture|placeholder/i.test(deny)
 
 export const cellsLength = ({ columns, rows }: Shape): number => Math.ceil((columns * rows * 12) / 3) * 4
 

@@ -4,6 +4,16 @@ Mods for Claude Code: live panes, bands, status lines and hooks, written as plug
 
 ## Mods
 
+### [slop-doom](mods/slop-doom)
+
+DOOM (shareware) in a pane. doomgeneric runs as WebAssembly in a sidecar; kitty and Ghostty get the native pixels, other terminals get quadrant characters, four pixels a cell. Needs `bun` or `node`. GPL-2.0.
+
+```
+/plugin install slop-doom --marketplace wobondar/claude-plugins
+```
+
+![slop-doom: the DOOM menu over E1M1, native pixels in a pane](assets/slop-doom.png)
+
 ### [slop-machine](mods/slop-machine)
 
 A three-reel slot machine above the prompt, paid in `󱚦` Claude Dollars you earn by prompting and Claude earns by calling tools.
@@ -23,16 +33,6 @@ Tetris in a pane, played with letter hotkeys. No wallet required.
 ```
 
 ![slop-tetris: the well, hold and next, score, and the hotkey strip](assets/slop-tetris.png)
-
-### [slop-doom](mods/slop-doom)
-
-DOOM (shareware) in a pane. doomgeneric runs as WebAssembly in a sidecar, every frame lands in a Raster at up to 160 columns. Needs `bun` or `node`. GPL-2.0.
-
-```
-/plugin install slop-doom --marketplace wobondar/claude-plugins
-```
-
-![slop-doom: the DOOM title screen in a pane](assets/slop-doom.png)
 
 ## Install
 

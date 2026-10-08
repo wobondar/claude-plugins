@@ -1,7 +1,7 @@
 {
   "name": "slop-doom",
-  "version": "0.1.0",
-  "description": "DOOM (shareware) in a pane: doomgeneric runs as WebAssembly in a sidecar, every frame lands in a Raster.",
+  "version": "0.2.0",
+  "description": "DOOM (shareware) in a pane: doomgeneric runs as WebAssembly in a sidecar, every frame lands as native pixels (kitty, Ghostty) or a Raster.",
   "author": {
     "name": "wobondar"
   },
@@ -12,6 +12,33 @@
       "description": "Frames a second the sidecar sends to the pane. Lower it if the picture flickers.",
       "default": 15,
       "title": "Frames per second"
+    },
+    "display": {
+      "type": "string",
+      "options": ["auto", "image", "cells"],
+      "description": "image: native 320x200 pixels where the terminal draws them (kitty, Ghostty). cells: half-block characters, any terminal. auto: image on a terminal known to draw pixels, cells when it refuses.",
+      "default": "auto",
+      "title": "Display"
+    },
+    "cell": {
+      "type": "number",
+      "description": "Your terminal cell's width divided by its height. Most coding fonts sit near 0.47; a 1:2 font is 0.5. Raise it if bands show beside the picture, lower it if they show above and below.",
+      "default": 0.47,
+      "title": "Cell shape"
+    },
+    "blocks": {
+      "type": "string",
+      "options": ["quad", "half"],
+      "description": "Glyphs of the cells display. quad shows four pixels a cell in two colours (sharper); half shows two, one above the other, for fonts whose quadrant glyphs leave seams.",
+      "default": "quad",
+      "title": "Cells glyphs"
+    },
+    "filter": {
+      "type": "string",
+      "options": ["mode", "box", "nearest"],
+      "description": "How a cell's colour is picked from its pixels on the cells display. mode keeps edges crisp, box is soft, nearest is noisy.",
+      "default": "mode",
+      "title": "Cells filter"
     }
   }
 }
