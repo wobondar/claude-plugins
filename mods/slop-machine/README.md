@@ -6,7 +6,7 @@ A three-reel slot machine inside Claude Code, paid in `󱚦` CLD (Claude Dollars
 
 The machine lives in the band above the prompt. Beside the reels: the balance and the bet, the session's income by source, the session's spin stats, the lifetime hall of fame, and the last two spins.
 
-Digits work at an empty prompt: `1` spins, `2` cycles the bet (25, 50, 100, 250, 500), `8` mutes and unmutes (kept across sessions), `0` hides the band to one line. The buttons are clickable too.
+Digits work at an empty prompt: `1` spins, `2` cycles the bet (25, 50, 100, 250, 500), `8` mutes and unmutes (kept across sessions), `0` hides the band to one line and brings it back. The buttons are clickable too. A session starts with the band hidden; the `Band at start` setting makes it expanded.
 
 ![the band hidden to one line, and the turn's closing line with the tally](../../assets/slop-machine-mini.png)
 
@@ -52,7 +52,7 @@ The command runs mid-turn too.
 
 ## Settings
 
-`/config` lists the mod's rows: `Sounds` (generated WAV clips, macOS), `Announcer voice` (macOS `say` on jackpots and type errors), `Starting balance`. `8` on the band mutes both without touching the settings.
+`/config` lists the mod's rows: `Sounds` (generated WAV clips, macOS), `Announcer voice` (macOS `say` on jackpots and type errors), `Starting balance`, `Band at start` (hidden or expanded). `8` on the band mutes both without touching the settings.
 
 ## Install
 

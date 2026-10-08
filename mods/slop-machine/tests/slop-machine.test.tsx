@@ -260,7 +260,7 @@ describe('/slop', () => {
     expect(wallet(seen).balance).toBe(100)
   })
 
-  test('8 mutes the clips and the voice, and the mute survives a session start', async ($, on) => {
+  test('8 mutes the clips and the voice, and the mute survives a session start', { options: { band: 'expanded' } }, async ($, on) => {
     const { seen, clock } = world(on)
     const ui = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', ...BAND })
     expect((await ui.find({ type: 'Button', key: 'mute' }))?.props.hotkey).toBe('8')
@@ -282,6 +282,21 @@ describe('/slop', () => {
     const { seen } = world(on)
     await $.session.start({ cwd: '/tmp', surface: 'terminal', isInteractive: true })
     expect(wallet(seen).balance).toBe(1000)
+  })
+
+  test('the band starts hidden unless the setting says expanded', async ($, on) => {
+    world(on)
+    await $.session.start({ cwd: '/tmp', surface: 'terminal', isInteractive: true })
+    const ui = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', ...BAND })
+    expect(await ui.find({ type: 'Raster' })).toBeUndefined()
+    expect(await ui.find({ type: 'Button', key: 'show' })).toBeDefined()
+  })
+
+  test('an expanded band setting starts with the reels on screen', { options: { band: 'expanded' } }, async ($, on) => {
+    world(on)
+    await $.session.start({ cwd: '/tmp', surface: 'terminal', isInteractive: true })
+    const ui = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', ...BAND })
+    expect(await ui.find({ type: 'Raster', key: 'band' })).toBeDefined()
   })
 })
 

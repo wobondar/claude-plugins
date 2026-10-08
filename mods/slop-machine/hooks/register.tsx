@@ -43,9 +43,11 @@ const marquee = atom({ plugin: 'slop-machine', key: 'marquee' } as const, 0)
 const isHidden = atom({ plugin: 'slop-machine', key: 'isHidden' } as const, false)
 const machine = atom({ plugin: 'slop-machine', key: 'machine' } as const, idleMachine())
 
-type Settings = { sounds: boolean; announcer: boolean; startingBalance: number }
+type Band = 'expanded' | 'hidden'
 
-let settings: Settings = { sounds: true, announcer: true, startingBalance: 100 }
+type Settings = { sounds: boolean; announcer: boolean; startingBalance: number; band: Band }
+
+let settings: Settings = { sounds: true, announcer: true, startingBalance: 100, band: 'hidden' }
 
 const isMuted = atom({ plugin: 'slop-machine', key: 'isMuted' } as const, false)
 
@@ -284,6 +286,7 @@ export const register: Register = (on, options) => {
     sounds: options.sounds !== false,
     announcer: options.announcer !== false,
     startingBalance: typeof options.startingBalance === 'number' ? options.startingBalance : 100,
+    band: options.band === 'expanded' ? 'expanded' : 'hidden',
   }
 
   on('session.start', async ($, e, next) => {
@@ -291,6 +294,7 @@ export const register: Register = (on, options) => {
     if (w.balance === 100 && w.spins === 0 && w.fromPrompts === 0 && settings.startingBalance !== 100) {
       await update($, wallet, held => ({ ...held, balance: settings.startingBalance }))
     }
+    await update($, isHidden, () => settings.band === 'hidden')
     for (const site of SITES) {
       const m = await read($, memberOf(machine, { requestId: site }))
       if (m.phase === 'spinning') await update($, memberOf(machine, { requestId: site }), held => ({ ...held, phase: 'idle' as const, stopped: [true, true, true] as [boolean, boolean, boolean] }))
@@ -351,7 +355,7 @@ export const register: Register = (on, options) => {
     if (e.origin.kind === 'plugin') return entered
     const chars = [...e.text].length
     const yeet = /\byeet\b/i.test(e.text) ? YEET_BONUS : 0
-    const w = await update($, wallet, held => ({
+    await update($, wallet, held => ({
       ...held,
       balance: held.balance + chars + yeet,
       fromPrompts: held.fromPrompts + chars + yeet,

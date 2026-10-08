@@ -1,6 +1,6 @@
 {
   "name": "slop-machine",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A three-reel slot machine in the band, a pane, a toast and the spinner, paid in Claude Dollars you earn by prompting and Claude earns by calling tools.",
   "author": {
     "name": "wobondar"
@@ -24,6 +24,13 @@
       "description": "Claude Dollars a fresh session starts with.",
       "default": 100,
       "title": "Starting balance"
+    },
+    "band": {
+      "type": "string",
+      "options": ["expanded", "hidden"],
+      "description": "How the band starts a session. expanded: reels, wallet and buttons. hidden: one line with the balance; 0 or /slop show expands it.",
+      "default": "hidden",
+      "title": "Band at start"
     }
   }
 }
